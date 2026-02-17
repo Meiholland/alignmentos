@@ -5,6 +5,7 @@ import {
   generateDiagnosticAnalysis,
   prepareAnalysisInput,
 } from '@/lib/ai/analysis-engine'
+import type { Json } from '@/types/database.types'
 
 // Increase timeout for long-running AI requests
 export const maxDuration = 300 // 5 minutes
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
       .from('diagnostic_reports')
       .insert({
         startup_id,
-        analysis_json: analysis,
+        analysis_json: analysis as Json, // Cast to Json type for Supabase
         executive_summary,
         created_by: user.id,
       })
