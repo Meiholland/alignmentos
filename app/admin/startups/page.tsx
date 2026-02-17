@@ -145,7 +145,7 @@ export default function StartupsListPage() {
       .filter(deal => !startups.some(s => s.pipedrive_deal_id === deal.id))
       .map(deal => ({
         id: `deal-${deal.id}`,
-        company_name: deal.title || deal.name || 'Unknown Company',
+        company_name: deal.title || 'Unknown Company',
         stage: stages.find(s => s.id === deal.stage_id)?.name || null,
         stageOrder: stages.find(s => s.id === deal.stage_id)?.order_nr || 0,
         isDeal: true,
