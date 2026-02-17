@@ -14,6 +14,9 @@ interface Startup {
   planned_close_date: string | null
   board_structure_description: string | null
   deal_partner: string | null
+  pipedrive_deal_id: number | null
+  pipedrive_stage_id: number | null
+  pipedrive_pipeline_id: number | null
   pipedrive_deal_created_at: string | null
   pipedrive_deal_updated_at: string | null
   created_at: string
