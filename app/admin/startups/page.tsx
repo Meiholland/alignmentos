@@ -150,6 +150,7 @@ export default function StartupsListPage() {
         stageOrder: stages.find(s => s.id === deal.stage_id)?.order_nr || 0,
         isDeal: true,
         dealId: deal.id,
+        pipedrive_deal_id: null, // Not imported yet
         created_at: new Date().toISOString(), // Use current date for sorting
       }))
 
@@ -179,8 +180,8 @@ export default function StartupsListPage() {
     // Sort: imported deals first, then by stage order (right to left), then by created_at
     combined.sort((a, b) => {
       // First priority: imported deals (have pipedrive_deal_id) come first
-      const aIsImported = a.pipedrive_deal_id ? 1 : 0
-      const bIsImported = b.pipedrive_deal_id ? 1 : 0
+      const aIsImported = (a.pipedrive_deal_id ?? null) ? 1 : 0
+      const bIsImported = (b.pipedrive_deal_id ?? null) ? 1 : 0
       if (aIsImported !== bIsImported) {
         return bIsImported - aIsImported // Imported (1) comes before non-imported (0)
       }
