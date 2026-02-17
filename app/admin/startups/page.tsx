@@ -146,11 +146,13 @@ export default function StartupsListPage() {
       .map(deal => ({
         id: `deal-${deal.id}`,
         company_name: deal.title || 'Unknown Company',
+        industry: null, // Not available for unimported deals
         stage: stages.find(s => s.id === deal.stage_id)?.name || null,
         stageOrder: stages.find(s => s.id === deal.stage_id)?.order_nr || 0,
         isDeal: true,
         dealId: deal.id,
         pipedrive_deal_id: null, // Not imported yet
+        pipedrive_stage_id: null, // Not imported yet
         created_at: new Date().toISOString(), // Use current date for sorting
       }))
 
