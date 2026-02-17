@@ -64,7 +64,7 @@ export async function GET(
     }
 
     // Fetch associated persons if available
-    let persons = []
+    let persons: unknown[] = []
     if (deal.person_id) {
       try {
         const personResponse = await fetch(

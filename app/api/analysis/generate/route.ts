@@ -5,7 +5,6 @@ import {
   generateDiagnosticAnalysis,
   prepareAnalysisInput,
 } from '@/lib/ai/analysis-engine'
-import type { Json } from '@/types/database.types'
 
 // Increase timeout for long-running AI requests
 export const maxDuration = 300 // 5 minutes
@@ -55,16 +54,16 @@ export async function POST(request: NextRequest) {
 
     console.log('[API] Step 6: Saving to database...')
     const adminSupabase = createAdminClient()
-    const { data, error } = await adminSupabase
+    const { data, error } = await (adminSupabase
       .from('diagnostic_reports')
       .insert({
         startup_id,
-        analysis_json: analysis as Json, // Cast to Json type for Supabase
+        analysis_json: analysis as unknown as Record<string, unknown>,
         executive_summary,
         created_by: user.id,
-      })
+      } as any)
       .select()
-      .single()
+      .single())
 
     if (error) {
       console.error('[API] Database error:', error)
