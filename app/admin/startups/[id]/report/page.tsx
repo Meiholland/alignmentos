@@ -211,7 +211,7 @@ export default function DiagnosticReportPage() {
                   <PolarAngleAxis
                     dataKey="dimension"
                     tick={{ fill: '#666', fontSize: 12 }}
-                    tickFormatter={(value) => value.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                    tickFormatter={(value) => value.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                   />
                   <PolarRadiusAxis angle={90} domain={[0, 10]} tick={{ fill: '#666', fontSize: 10 }} />
                   {comparisonData.founders.map((founder, idx) => {
