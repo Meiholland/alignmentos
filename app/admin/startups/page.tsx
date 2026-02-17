@@ -166,6 +166,7 @@ export default function StartupsListPage() {
         : 9999, // Manual startups go to end
       isDeal: false,
       pipedrive_deal_id: startup.pipedrive_deal_id, // Include for sorting
+      dealId: undefined, // Not a deal, so no dealId
     }))
 
     // Combine and filter by search
@@ -328,8 +329,8 @@ export default function StartupsListPage() {
                         </span>
                       </div>
                       <button
-                        onClick={() => handleImportDeal(item.dealId!)}
-                        disabled={importingDealId === item.dealId}
+                        onClick={() => item.dealId && handleImportDeal(item.dealId)}
+                        disabled={!item.dealId || importingDealId === item.dealId}
                         className="px-3 py-1 bg-accent-magenta text-white text-sm rounded hover:opacity-90 disabled:opacity-50"
                       >
                         {importingDealId === item.dealId ? 'Importing...' : 'Import'}
