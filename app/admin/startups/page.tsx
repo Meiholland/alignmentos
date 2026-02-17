@@ -155,7 +155,7 @@ export default function StartupsListPage() {
 
     // Create display items from startups
     const startupItems = startups.map(startup => ({
-      id: startup.id,
+      ...startup,
       company_name: startup.company_name,
       stage: startup.stage || (startup.pipedrive_stage_id 
         ? stages.find(s => s.id === startup.pipedrive_stage_id)?.name || null
@@ -165,7 +165,6 @@ export default function StartupsListPage() {
         : 9999, // Manual startups go to end
       isDeal: false,
       pipedrive_deal_id: startup.pipedrive_deal_id, // Include for sorting
-      ...startup,
     }))
 
     // Combine and filter by search
