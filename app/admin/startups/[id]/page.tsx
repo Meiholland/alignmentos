@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getFunnelForStage, type StageForFunnel } from '@/lib/kanban-funnels'
 
 interface Startup {
   id: string
@@ -36,6 +37,7 @@ interface Founder {
   survey_status: string
   interview_status: string
   survey_token: string
+  has_deal_team_survey?: boolean
 }
 
 export default function StartupDetailPage() {
@@ -84,6 +86,7 @@ export default function StartupDetailPage() {
   const [showDeleteTranscriptModal, setShowDeleteTranscriptModal] = useState(false)
   const [transcriptToDelete, setTranscriptToDelete] = useState<{ id: string; name: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [dealTeamStages, setDealTeamStages] = useState<StageForFunnel[]>([])
 
   useEffect(() => {
     const startupId = params?.id as string
@@ -95,6 +98,29 @@ export default function StartupDetailPage() {
       setLoading(false)
     }
   }, [params])
+
+  // Fetch pipeline stages to determine if deal team survey is available (funnel 2)
+  useEffect(() => {
+    if (!startup?.pipedrive_pipeline_id) {
+      setDealTeamStages([])
+      return
+    }
+    let cancelled = false
+    fetch(`/api/pipedrive/pipelines/${startup.pipedrive_pipeline_id}/stages`)
+      .then((res) => (res.ok ? res.json() : { stages: [] }))
+      .then((data) => {
+        if (!cancelled && data.stages) {
+          const sorted = (data.stages as StageForFunnel[]).sort(
+            (a: StageForFunnel, b: StageForFunnel) => (a.order_nr || 0) - (b.order_nr || 0)
+          )
+          setDealTeamStages(sorted)
+        }
+      })
+      .catch(() => setDealTeamStages([]))
+    return () => {
+      cancelled = true
+    }
+  }, [startup?.pipedrive_pipeline_id])
 
   // Cleanup: abort any pending analysis requests on unmount
   useEffect(() => {
@@ -816,8 +842,7 @@ export default function StartupDetailPage() {
                 <th className="p-4 text-left">Role</th>
                 <th className="p-4 text-left">Email</th>
                 <th className="p-4 text-left">Equity</th>
-                <th className="p-4 text-left">Survey Status</th>
-                <th className="p-4 text-left">Interview Status</th>
+                <th className="p-4 text-left">Status</th>
                 <th className="p-4 text-left">Actions</th>
               </tr>
             </thead>
@@ -831,31 +856,66 @@ export default function StartupDetailPage() {
                     {founder.equity_percentage ? `${founder.equity_percentage}%` : 'N/A'}
                   </td>
                   <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        founder.survey_status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : founder.survey_status === 'sent'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {founder.survey_status}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        founder.interview_status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {founder.interview_status}
-                    </span>
-                  </td>
-                  <td className="p-4">
                     <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-block h-4 w-4 rounded-full flex-shrink-0 ${
+                          founder.survey_status === 'completed' ? 'bg-green-500' : 'bg-gray-300'
+                        }`}
+                        title="Self survey"
+                        aria-label={`Self survey: ${founder.survey_status}`}
+                      />
+                      <span
+                        className={`inline-block h-4 w-4 rounded-full flex-shrink-0 ${
+                          founder.interview_status === 'completed' ? 'bg-green-500' : 'bg-gray-300'
+                        }`}
+                        title="Interview"
+                        aria-label={`Interview: ${founder.interview_status}`}
+                      />
+                      <span
+                        className={`inline-block h-4 w-4 rounded-full flex-shrink-0 ${
+                          founder.has_deal_team_survey ? 'bg-green-500' : 'bg-gray-300'
+                        }`}
+                        title="Deal team survey"
+                        aria-label={`Deal team survey: ${founder.has_deal_team_survey ? 'submitted' : 'pending'}`}
+                      />
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {startup &&
+                        dealTeamStages.length > 0 &&
+                        (() => {
+                          const funnel = getFunnelForStage(
+                            startup.pipedrive_stage_id != null
+                              ? dealTeamStages.find((s) => s.id === startup.pipedrive_stage_id)
+                                  ?.order_nr ?? null
+                              : null,
+                            startup.stage,
+                            dealTeamStages
+                          )
+                          return funnel === 2 || funnel === 3
+                        })(                        ) && (
+                          <Link
+                            href={`/admin/startups/${startup.id}/deal-team-survey/${founder.id}`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white transition hover:opacity-90"
+                            title="Deal team de-biasing survey"
+                            aria-label="Deal team de-biasing survey"
+                          >
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                              />
+                            </svg>
+                          </Link>
+                        )}
                       <button
                         onClick={() => handleSendSurvey(founder.id)}
                         className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-magenta text-white transition hover:opacity-90"

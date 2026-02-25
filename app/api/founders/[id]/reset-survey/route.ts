@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppBaseUrl } from '@/lib/app-url'
 
 export async function POST(
   request: NextRequest,
@@ -23,6 +24,8 @@ export async function POST(
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const baseUrl = getAppBaseUrl(request)
 
     const adminSupabase = createAdminClient()
 
@@ -55,7 +58,7 @@ export async function POST(
       return NextResponse.json({ error: updateError.message }, { status: 400 })
     }
 
-    const surveyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/survey/${data.survey_token}`
+    const surveyUrl = `${baseUrl}/survey/${data.survey_token}`
 
     return NextResponse.json({
       ...data,

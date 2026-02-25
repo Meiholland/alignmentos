@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppBaseUrl } from '@/lib/app-url'
 
 export async function POST(
   request: NextRequest,
@@ -25,6 +26,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const baseUrl = getAppBaseUrl(request)
+
     // Check if founder already has survey responses
     const adminSupabase = createAdminClient()
     const { data: existingResponses } = await adminSupabase
@@ -45,7 +48,7 @@ export async function POST(
         return NextResponse.json({ error: 'Founder not found' }, { status: 404 })
       }
 
-      const surveyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/survey/${founder.survey_token}`
+      const surveyUrl = `${baseUrl}/survey/${founder.survey_token}`
 
       return NextResponse.json({
         survey_url: surveyUrl,
@@ -65,8 +68,8 @@ export async function POST(
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // In production, you would send an email here with the survey link
-    const surveyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/survey/${data.survey_token}`
+    // Use request host so links point to current domain (e.g. https://alignmentos.vercel.app on Vercel)
+    const surveyUrl = `${baseUrl}/survey/${data.survey_token}`
 
     return NextResponse.json({
       ...data,
